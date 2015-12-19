@@ -1,4 +1,9 @@
+#ifndef IO_H
+#define IO_H
+
 #include "amc7812.h"
+#include <stdint.h>
+#include "feedback_conf.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // status values
@@ -17,30 +22,27 @@
  */
 class IO {
   private:
-    AMC7812Class amc7812;       //!< input/output driver class
-    const uint8_t i_channels;   //!< number of input channels available
-    const uint8_t o_channels;   //!< number of output channels available
-    uint16_t i_ch_mask;         //!< enabled input channels, bitwise
-    uint16_t o_ch_mask;         //!< enabled output channels, bitwise
-    int16_t i_vals[i_channels]; //!< result of last channel reads
-    int16_t o_vals[o_channels]; //!< result of last channel reads
-    uint8_t status;             //!< device status register
-    uint16_t last_call_us;      //!< timestamp from last read, in microseconds
-    uint16_t dt_us;             //!< elasped time between last two reads, in microseconds
+    AMC7812Class amc7812;                     //!< input/output driver class
+    static const uint8_t i_channels = O_CHANNELS; //!< number of input channels available
+    static const uint8_t o_channels = I_CHANNELS; //!< number of output channels available
+    uint16_t i_ch_mask;                       //!< enabled input channels, bitwise
+    uint16_t o_ch_mask;                       //!< enabled output channels, bitwise
+    int16_t i_vals[i_channels];               //!< result of last channel reads
+    int16_t o_vals[o_channels];               //!< result of last channel reads
+    uint8_t status;                           //!< device status register
+    uint16_t last_call_us;                    //!< timestamp from last read, in microseconds
+    uint16_t dt_us;                           //!< elasped time between last two reads, in microseconds
 
     //! generate bit mask for 
 
   public:
     //! class constructor
     /*!
-     * \param _i_chs specifies the maximum number of input channels available
-     * \param _o_chs specifies the maximum number of output channels available
-     *
      * Constructor sets class fields, does not begin communication with device,
      * to do that `Init()` must be called after.
      */
-    IO( uint8_t _i_chs, _o_chs ) : i_channels(_i_chs), o_channels(_o_chs){
-      status = IO_STATUS_NC
+    IO(){
+      status = IO_STATUS_NC;
     };
 
     //! Initiaizes driver and device to prepare for feedback.
@@ -52,13 +54,13 @@ class IO {
 
     //! Perform a read operation, updating i_vals data array
     /*!
-     * \return pointer to i_vals data array
+     * \return error code, 0 is no error
      *
      * Read enabled input channels from device, a pointer to the array is
      * returned.
      * Value of non-enabled channels is not defined at this level, check the driver.
      */
-    int16_t* ReadInputs();
+    int8_t ReadInputs();
 
     //! Get the last read values, don't update
     /*!
@@ -72,13 +74,13 @@ class IO {
     /*!
      * \return number of input channels availble on the device
      */
-    const uint8_t GetAvailableIChannels(){ return i_channels };
+    const uint8_t GetAvailableIChannels(){ return i_channels; };
 
     //! Set the bitwise input channel enabled mask and update device
     /*!
      * Enabled channels are denoted by a 1 in the corresponding bit.
      */
-    void SetEnabledIChannels();
+    void SetEnabledIChannels( uint16_t mask );
 
     //! Return the bitwise input channel enabled mask
     /*!
@@ -114,13 +116,13 @@ class IO {
     /*!
      * \return number of output channels availble on the device
      */
-    const uint8_t GetAvailableOChannels(){ return o_channels };
+    const uint8_t GetAvailableOChannels(){ return o_channels; };
 
     //! Set the bitwise output channel enabled mask and update device
     /*!
      * Enabled channels are denoted by a 1 in the corresponding bit.
      */
-    void SetEnabledOChannels();
+    void SetEnabledOChannels( uint16_t mask );
 
     //! Return the bitwise output channel enabled mask
     /*!
@@ -129,4 +131,11 @@ class IO {
      * Enabled channels are denoted by a 1 in the corresponding bit.
      */
     uint16_t GetEnabledOChannels(){ return o_ch_mask; };
-}
+
+    //! Simultaneously update all DAC Channels
+    void UpdateDAC(){
+      amc7812.UpdateDAC();
+    }
+};
+
+#endif

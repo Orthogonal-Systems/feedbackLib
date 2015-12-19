@@ -1,3 +1,4 @@
+#include "io.h"
 #include "Arduino.h"    // micros
 #include "amc7812err.h" // error codes
 
@@ -21,6 +22,7 @@ uint8_t IO::Init(){
   // passed initial setup read channel masks from driver
   i_ch_mask = amc7812.GetADCStatus();
   o_ch_mask = amc7812.GetDACStatus();
+  return 0;
 }
 
 //! Perform a read operation, updating i_vals data array
@@ -39,11 +41,14 @@ int8_t IO::ReadInputs(){
   // set timestamp for last read value
   last_call_us = (uint16_t)micros();
   // retrieve values
-  i_vals = (int16_t)amc7812.GetADCReadings();
+  uint16_t* adc_vals = amc7812.GetADCReadings();
+  for( uint8_t i=0; i<i_channels; i++){
+    i_vals[i] = (int16_t)adc_vals[i];
+  }
   return 0;
 }
 
-void IO:SetOutputs( int16_t setpoints ){
+void IO::SetOutputs( int16_t* setpoints ){
   // TODO: convert from signed to unsigned?
   for( uint8_t i=0; i<o_channels; i++ ){
     amc7812.WriteDAC( i, (uint16_t)setpoints[i] );
@@ -54,7 +59,7 @@ void IO:SetOutputs( int16_t setpoints ){
 /*!
   * Enabled channels are denoted by a 1 in the corresponding bit.
   */
-void IO::SetEnabledIChannels(uint8_t mask){
+void IO::SetEnabledIChannels(uint16_t mask){
   for( uint8_t i=0; i<i_channels; i++ ){
     if( (mask>>i)&(0x01) ){
       amc7812.EnableADC(i);
@@ -67,7 +72,7 @@ void IO::SetEnabledIChannels(uint8_t mask){
 /*!
   * Enabled channels are denoted by a 1 in the corresponding bit.
   */
-void IO::SetEnabledOChannels(uint8_t mask){
+void IO::SetEnabledOChannels(uint16_t mask){
   for( uint8_t i=0; i<o_channels; i++ ){
     if( (mask>>i)&(0x01) ){
       amc7812.EnableDAC(i);
@@ -75,5 +80,3 @@ void IO::SetEnabledOChannels(uint8_t mask){
   }
   o_ch_mask = mask;
 }
-
-

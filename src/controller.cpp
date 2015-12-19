@@ -5,19 +5,14 @@
   * \param errors pointer to current error value
   * \return errors code, 0 for no error
   */
-uint8_t CalcNextValue( itype *errors ){
-  for( uint8_t o; o<o_channels; o_channels++ ){
-    for( uint8_t i; i<i_channels; i_channels++ ){
-      (((int32_t)transfer_matrix[o][i]) * errors[i]
+uint8_t Controller::CalcNextValue( int16_t* errors ){
+  for( uint8_t o; o<o_channels; o++ ){
+    for( uint8_t i; i<i_channels; i++ ){
+      new_output[o] = (int16_t)( (((int32_t)transfer_matrix[o][i]) * errors[i]) >> 16);
     }
   }
+  return 0;
 };
-
-//! Get the next value to push to the output
-/*!
-  * \return next value to push to the output
-  */
-otype* GetNextValue( itype *errors ){ return new_output; };
 
 //! Resets all feedback memory
 /*!
@@ -26,17 +21,16 @@ otype* GetNextValue( itype *errors ){ return new_output; };
   * Override the last_output value stored and clear history.
   * It is necessary to initialize to a reasonable output
   */
-void Reset( otype *val );
-//void Flush(); // is this necessary?
+void Controller::Reset( int16_t* val ){
+  for(uint8_t i=0; i<i_channels; i++){
+    new_output[i] = val[i];
+  }
+}
 
-//! Return the number of available input channels
-/*!
-  * \return number of input channels availble on the device
-  */
-const uint8_t GetIChannels(){ return i_channels };
-
-//! Return the number of available output channels
-/*!
-  * \return number of output channels availble on the device
-  */
-const uint8_t GetOChannels(){ return o_channels };
+void Controller::SetTransferMatrix( int8_t** tm ){
+  for(uint8_t i=0; i<i_channels; i++){
+    for(uint8_t o=0; o<o_channels; o++){
+      transfer_matrix[o][i] = tm[o][i];
+    }
+  }
+}

@@ -1,38 +1,41 @@
 #ifndef ERROR_H
 #define ERROR_H
 
+#include <stdint.h>
+#include "feedback_conf.h"
+
 //! Error computation and statistics handling
 /*!
  * Calculates errors and error statistics
  */
 class Error {
   private:
-    const uint8_t channels;       //!< input channels 
-    size_t channel_mask;          //!< enabled channels, bitwise
-    uint16_t references[channels];   //!< channel setpoints
-    uint16_t last_errors[channels];  //!< stores last error calculation
-    uint16_t error_mean[channels];   //!< stores mean errors
-    uint16_t error_rms[channels];    //!< stores rms errors
-    uint16_t smoothing_factor[channels]; //!< discrete time rc-factor
+    static const uint8_t chs = I_CHANNELS; //!< input channels 
+    uint16_t channel_mask;                //!< enabled channels, bitwise
+    int16_t references[chs];             //!< channel setpoints
+    int16_t last_errors[chs];            //!< stores last error calculation
+    int16_t error_mean[chs];             //!< stores mean errors
+    uint16_t error_rms[chs];              //!< stores rms errors
+    uint16_t smoothing_factor[chs];       //!< discrete time rc-factor
 
   public: 
     //! Class constructor
     /*!
      * \param _channels is the number of available input channels
      */
-    Error( uint8_t _channels ) : channels(_channels);
+    Error();
 
     //! return the reference points
-    uint16_t* GetReferences(){ return references; };
+    int16_t* GetReferences(){ return references; };
 
     //! change the references for each channel
-    void   SetReferences( uint16_t *_references );
+    void   SetReferences( int16_t *_references );
 
     //! get the last errors, dont refresh
     /*!
      * \return pointer to last_errors data array
      */
-    uint16_t* GetErrors(){ return last_errors; };
+    int16_t* GetErrors(){ return last_errors; };
 
     //! calculate new error values from inputs
     /*!
@@ -41,13 +44,13 @@ class Error {
      *
      * calculates errors, means, and rms values
      */
-    uint16_t* CalculateErrors( uint16_t *i_vals );
+    int16_t* CalculateErrors( int16_t *i_vals );
 
     //! get the mean error values
     /*!
      * \return channel error means
      */
-    uint16_t* GetErrorMean(){ return error_mean; };
+    int16_t* GetErrorMean(){ return error_mean; };
 
     //! get the rms error values
     /*!
@@ -59,7 +62,7 @@ class Error {
     /*!
      * \return available input channels
      */
-    const uint8_t GetChannels(){ return channels };
+    const uint8_t GetChannels(){ return chs; };
 
     //! set the smoothing factors
     /*!
@@ -69,7 +72,9 @@ class Error {
      *  `SetTimeConst_us()` or `SetTimeConst_ms()`
      */
     void SetSmoothingFactor( uint16_t* sf ){
-      smoothing_factor = sf;
+      for(uint8_t i=0; i<chs; i++){
+        smoothing_factor[i] = sf[i];
+      }
     }
 
     //! get the smoothing factors
@@ -79,7 +84,7 @@ class Error {
      *  gets the smoothing facotr as a raw number, to get as time in ms(us) use:
      *  `GetTimeConst_us()` or `GetTimeConst_ms()`
      */
-    uint16_t* SetSmoothingFactor(){
+    uint16_t* GetSmoothingFactor(){
       return smoothing_factor;
     }
 
@@ -92,7 +97,7 @@ class Error {
      *  `SetChTimeConst_us()` or `SetChTimeConst_ms()`
      */
     void SetChSmoothingFactor( uint8_t n, uint16_t sf ){
-      if ( n < channels ){
+      if ( n < chs ){
         smoothing_factor[n] = sf;
       }
     }
@@ -108,26 +113,14 @@ class Error {
       return smoothing_factor[n];
     }
 
-    //! set the smoothing factor in terms of the time constant in ms
+    //! set the smoothing factors in terms of the time constant in ms
     /*!
      * \param rc is the rc time constant in ms
      * \return computed smoothing factors
      */
     uint16_t* SetTimeConst_ms( uint16_t* rc ){
-      for( uint8_t i = 0; i<channels; i++ ){
-        smoothing_factor[i] = rc[i]/(0xFFFF - rc[i]);
-      }
-      return smoothing_factor;
-    }
-
-    //! set the smoothing factor in terms of the time constant in ms
-    /*!
-     * \param rc is the rc time constant in ms
-     * \return computed smoothing factors
-     */
-    uint16_t GetTimeConst_ms(){
-      for( uint8_t i = 0; i<channels; i++ ){
-        smoothing_factor[i] = rc[i]/(0xFFFF - rc[i]);
+      for( uint8_t i = 0; i<chs; i++ ){
+        smoothing_factor[i] = (uint16_t)((((uint32_t)rc[i]<<16)/(0xFFFF - rc[i]))>>16);
       }
       return smoothing_factor;
     }
@@ -138,21 +131,18 @@ class Error {
      * \return computed smoothing factors
      */
     uint16_t SetChTimeConst_ms( uint8_t n, uint16_t rc ){
-      SetChSmoothingFector(n, rc/(0xFFFF - rc));
+      SetChSmoothingFactor(n, rc/(0xFFFF - rc));
       return smoothing_factor[n];
     }
 
     //! set the smoothing factor in terms of the time constant in ms
     /*!
-     * \param rc is the rc time constant in ms
+     * \param n is the channel number
      * \return computed smoothing factors
      */
-    uint16_t GetTimeConst_ms(){
-      for( uint8_t i = 0; i<channels; i++ ){
-        smoothing_factor[i] = rc[i]/(0xFFFF - rc[i]);
-      }
-      return smoothing_factor;
+    uint16_t GetChTimeConst_ms( uint8_t n ){
+      return (uint16_t)(smoothing_factor[n]/(0xFFFF + smoothing_factor[n]));
     }
-}
+};
 
 #endif

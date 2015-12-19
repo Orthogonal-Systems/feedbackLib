@@ -1,12 +1,14 @@
 #include "error.h"
 
-Error::Error( uint8_t _channels, uint16_t *refs ) : channels(_channels){
-  references = refs;
+Error::Error(){
+  //SetReferences( refs );
 }
 
 //! change the references for each channel
-void   SetReferences( uint16_t *_references ){
-  references = _references;
+void Error::SetReferences( int16_t *_references ){
+  for(uint8_t i=0; i<chs; i++){
+    references[i] = _references[i];
+  }
 }
 
 //! calculate new error values from inputs
@@ -16,8 +18,8 @@ void   SetReferences( uint16_t *_references ){
   *
   * calculates errors, means, and rms values
   */
-uint16_t* CalculateErrors( uint16_t *i_vals ){
-  for( uint8_t i; i<channels; i++ ){
+int16_t* Error::CalculateErrors( int16_t *i_vals ){
+  for( uint8_t i=0; i<chs; i++ ){
     last_errors[i] = i_vals[i] - references[i];
     error_mean[i] = (int16_t)( ( ((int32_t)last_errors[i])*smoothing_factor[i] ) >> 16);
     error_rms[i]=0; // TODO calculate rms error, needs more storage?
