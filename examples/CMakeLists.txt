@@ -15,3 +15,4 @@ add_avr_executable(feedback_test feedback_test/feedback_test.cpp)
 ### acm7812_test
 avr_target_link_libraries(feedback_test AMC7812)
 avr_target_link_libraries(feedback_test ARDUINO)
+avr_target_link_libraries(feedback_test FEEDBACK)

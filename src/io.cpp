@@ -1,6 +1,7 @@
 #include "io.h"
 #include "Arduino.h"    // micros
 #include "amc7812err.h" // error codes
+#include "amc7812.h" // error codes
 
 //! Initiaizes driver and device to prepare for feedback.
 /*!

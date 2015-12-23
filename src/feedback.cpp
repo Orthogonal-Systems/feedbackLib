@@ -7,7 +7,11 @@ Feedback::Feedback(){
   // initialize member classes with const fields
   io = IO();
   err = Error();
-  ctrl = Controller();
+  int16_t inits[o_channels]; 
+  for(uint8_t i=0; i<o_channels; i++){
+    inits[i]=0;
+  }
+  ctrl = Controller(inits);
 }
 
 uint8_t Feedback::Init(){
