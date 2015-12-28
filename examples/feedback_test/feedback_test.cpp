@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "feedback.h"
+#include "error.h"
 #include "feedback_conf.h"
 
 const char init_str[] = "Initializing : ";
@@ -32,9 +33,9 @@ void setup (){
   }
   fb.err.SetReferences( refs );
 
-  // setup controller
+  // setup error matrix
   for( uint8_t i=0; i<I_CHANNELS; i++ ){
-    fb.ctrl.SetTransferMatrixEntry(i,i,0x10);
+    fb.err.SetErrorMatrixEntry(i,i,0x10);
   }
 
   int16_t* retrefs = fb.err.GetReferences();
@@ -44,7 +45,7 @@ void setup (){
 
   for( uint8_t i=0; i<I_CHANNELS; i++ ){
     for( uint8_t o=0; o<O_CHANNELS; o++ ){
-      Serial.printf("tm[%d][%d] = %d\n", o, i, fb.ctrl.GetTransferMatrixEntry(o,i));
+      Serial.printf("tm[%d][%d] = %d\n", o, i, fb.err.GetErrorMatrixEntry(o,i));
     }
   }
 }
@@ -65,20 +66,23 @@ void loop(){
   Serial.println("");
     
     
-  int16_t* errors = fb.err.GetErrors();
+  int16_t* p_errors = fb.err.GetPErrors();
+  int16_t* i_errors = fb.err.GetIErrors();
+  int16_t* d_errors = fb.err.GetDErrors();
+
   Serial.println("errors:");
   for(uint8_t i=0; i<I_CHANNELS; i++){
   //for(uint8_t i=ch; i<ch+1; i++){
-    Serial.printf("ch[%d]: %d\n", i, errors[i]);
+    Serial.printf("ch[%d]: P: %05d, I: %05d, D: %05d\n", i, p_errors[i], i_errors[i], d_errors[i]);
   }
   Serial.println("");
 
   fb.Update();
-  errors = fb.ctrl.GetNextValue();
+  int16_t* outs = fb.ctrl.GetNextValue();
   Serial.println("outs:");
   for(uint8_t i=0; i<O_CHANNELS; i++){
   //for(uint8_t i=ch; i<ch+1; i++){
-    Serial.printf("ch[%d]: %d\n", i, errors[i]);
+    Serial.printf("ch[%d]: %d\n", i, outs[i]);
   }
   Serial.println("\n\n\n");
 

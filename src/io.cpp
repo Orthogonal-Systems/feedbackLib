@@ -40,7 +40,9 @@ int8_t IO::ReadInputs(){
     return err;
   }
   // set timestamp for last read value
-  last_call_us = (uint16_t)micros();
+  uint16_t read_time_us = (uint16_t)micros();
+  deltaT_us = read_time_us - last_call_us;
+  last_call_us = read_time_us;
   // retrieve values
   uint16_t* adc_vals = amc7812.GetADCReadings();
   for( uint8_t i=0; i<i_channels; i++){

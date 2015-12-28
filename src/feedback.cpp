@@ -1,4 +1,5 @@
 #include "feedback.h"
+#include "feedback_conf.h"
 #include "error.h"
 #include "io.h"
 #include "controller.h"
@@ -26,7 +27,8 @@ uint8_t Feedback::Measure(){
     return error;
   }
   int16_t* ins = io.GetLastInputs();
-  int16_t* errs = err.CalculateErrors( ins );
+  uint16_t deltaT_us = io.GetDeltaT_us();
+  errors_t errs = err.CalculateErrors( ins, deltaT_us );
   ctrl.CalcNextValue( errs );
   // push corrected outputs to system, update occurs on trigger
   io.SetOutputs( ctrl.GetNextValue() );
