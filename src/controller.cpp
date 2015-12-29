@@ -33,9 +33,9 @@ void Controller::init( int16_t* init_output ){
   */
 uint8_t Controller::CalcNextValue( errors_t errors ){
   
-  int32_t temp;
   for( uint8_t o=0; o<o_channels; o++ ){
-    temp = ((int32_t)(weights[o][P_INDEX] * errors.error_P[o])) >> 7;
+    int32_t temp = output[o];
+    temp += ((int32_t)(weights[o][P_INDEX] * errors.error_P[o])) >> 7;
     temp += ((int32_t)(weights[o][I_INDEX] * errors.error_I[o])) >> 7;
     temp += ((int32_t)(weights[o][D_INDEX] * errors.error_D[o])) >> 7;
     output[o] = CheckRange( temp, 

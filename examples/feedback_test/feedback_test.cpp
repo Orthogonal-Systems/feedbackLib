@@ -51,7 +51,7 @@ void setup (){
 }
 
 void loop(){
-  uint8_t ch = 1;
+  uint8_t ch = 3;
   uint8_t err = fb.Measure();
   if (err){
     Serial.printf("\nmeasure error recieved: 0x%x\n\n", err);
@@ -59,8 +59,8 @@ void loop(){
 
   int16_t* ins = fb.io.GetLastInputs();
   Serial.println("inputs:");
-  for(uint8_t i=0; i<I_CHANNELS; i++){
-  //for(uint8_t i=ch; i<ch+1; i++){
+  //for(uint8_t i=0; i<I_CHANNELS; i++){
+  for(uint8_t i=ch; i<ch+1; i++){
     Serial.printf("ch[%d]: %d\n", i, ins[i]);
   }
   Serial.println("");
@@ -71,8 +71,8 @@ void loop(){
   int16_t* d_errors = fb.err.GetDErrors();
 
   Serial.println("errors:");
-  for(uint8_t i=0; i<I_CHANNELS; i++){
-  //for(uint8_t i=ch; i<ch+1; i++){
+  //for(uint8_t i=0; i<I_CHANNELS; i++){
+  for(uint8_t i=ch; i<ch+1; i++){
     Serial.printf("ch[%d]: P: %05d, I: %05d, D: %05d\n", i, p_errors[i], i_errors[i], d_errors[i]);
   }
   Serial.println("");
@@ -80,13 +80,13 @@ void loop(){
   fb.Update();
   int16_t* outs = fb.ctrl.GetNextValue();
   Serial.println("outs:");
-  for(uint8_t i=0; i<O_CHANNELS; i++){
-  //for(uint8_t i=ch; i<ch+1; i++){
+  //for(uint8_t i=0; i<O_CHANNELS; i++){
+  for(uint8_t i=ch; i<ch+1; i++){
     Serial.printf("ch[%d]: %d\n", i, outs[i]);
   }
   Serial.println("\n\n\n");
 
-  delay(5000);
+  delay(1000);
 }
 
 // normal arduino main function
