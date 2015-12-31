@@ -55,7 +55,8 @@ const errors_t & Error::CalculateErrors ( const int16_t *i_vals, const uint16_t 
     // calculate proportional errors
     errors.error_P[e] = CheckRange( new_errs[e], FEEDBACK_ERROR_BOUND );;
     // calculate integral errors
-    new_err = errors.error_I[e] + (errors.error_P[e]*deltaT_ms);
+    // type casting deltaT_ms is necessary!
+    new_err = errors.error_I[e] + (errors.error_P[e]*(int32_t)deltaT_ms)>>4;
     errors.error_I[e] = CheckRange( new_err, FEEDBACK_ERROR_BOUND );
   }
   return errors;

@@ -3,6 +3,10 @@
 #include "error.h"
 #include "feedback_conf.h"
 
+#define AVERAGES 4 // 2**4 = 16
+#define DEBUG_DELAY 100 // ms
+#define DEBUG 1
+
 const char init_str[] = "Initializing : ";
 const char suc_str[] = "Success";
 const char err_str[] = "Failure, code: 0x";
@@ -28,18 +32,21 @@ void setupTrigger(){
 // cycle cant be too fast, or it will get out sync
 // TODO: make more robust
 void waitForTrigger(){
+#if DEBUG
+  delay(DEBUG_DELAY); // remove in implementation
+#else
   uint8_t initial = digitalRead( trigPin );
   Serial.printf( "waiting for %s transition\n", (initial ? "high" : "low") );
-  delay(100); // remove
   while(1){
-    //if( digitalRead( trigPin ) != initial ){
+    if( digitalRead( trigPin ) != initial ){
       break;
-    //}
+    }
   }
+#endif
 }
 
 void setup (){
-  fb = Feedback();
+  fb = Feedback(AVERAGES);
   setupTrigger();
 
   Serial.begin(115200);
@@ -76,16 +83,16 @@ void loop(){
   waitForTrigger();
   uint8_t err = fb.Measure();
   if (err){
-    Serial.printf("\nmeasure error recieved: 0x%x\n\n", err);
+    Serial.printf("\nerror recieved: 0x%x\n\n", err);
   } else {
-
     data = fb.io.GetLastInputs();
-    Serial.printf("iteration: 0x%04X\n", cnt);
+//    Serial.printf("iteration: 0x%04X\n", cnt);
 
-    Serial.println("inputs:");
+//    Serial.println("inputs:");
     for(uint8_t i=0; i<I_CHANNELS; i++){
     //for(uint8_t i=ch; i<ch+1; i++){
-      Serial.printf("ch[%d]: %d\n", i, data[i]);
+      //Serial.printf("ch[%d]: %d\n", i, data[i]);
+      Serial.printf("%d", data[i]);
     }
     //Serial.println("");
       
@@ -93,22 +100,24 @@ void loop(){
     const int16_t *i_errors = fb.err.GetIErrors();
     const int16_t *d_errors = fb.err.GetDErrors();
 
-    Serial.println("errors:");
+    //Serial.println("errors:");
     for(uint8_t i=0; i<I_CHANNELS; i++){
     //for(uint8_t i=ch; i<ch+1; i++){
-      Serial.printf("ch[%d]: P: %05d, I: %05d, D: %05d\n", i, p_errors[i], i_errors[i], d_errors[i]);
+      //Serial.printf("ch[%d]: P: %05d, I: %05d, D: %05d\n", i, p_errors[i], i_errors[i], d_errors[i]);
+      Serial.printf(",%05d,%05d,%05d", p_errors[i], i_errors[i], d_errors[i]);
     }
     //Serial.println("");
 
     waitForTrigger();
     fb.Update();
     data = fb.ctrl.GetNextValue();
-    Serial.println("outs:");
+    //Serial.println("outs:");
     for(uint8_t i=0; i<O_CHANNELS; i++){
   //for(uint8_t i=ch; i<ch+1; i++){
-    Serial.printf("ch[%d]: %d\n", i, data[i]);
+      //Serial.printf("ch[%d]: %d\n", i, data[i]);
+      Serial.printf(",%d", data[i]);
     }
-    Serial.println("\n");
+    Serial.print("\n");
 
     cnt++;
   }

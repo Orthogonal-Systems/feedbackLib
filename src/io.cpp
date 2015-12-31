@@ -39,18 +39,54 @@ uint8_t IO::Init(){
   * Value of non-enabled channels is not defined at this level, check the driver.
   */
 int8_t IO::ReadInputs(){
-  uint8_t err = amc7812.ReadADCs();
-  if( err > 0 ){
-    return err;
-  }
+  return ReadInputs(0);
+}
+
+//! Perform 2**n read operations and average, updating i_vals data array
+/*!
+  * \param number of averages in powers of 2, 2**n, n>=8 -> n = 7
+  * \return device error code, 0 is for no error
+  *
+  * Reads and averages enabled input channels from device, data array is stored 
+  * retrieve with `GetLastInputs()`.
+  * Value of non-enabled channels is not defined at this level, check the driver.
+  */
+int8_t IO::ReadInputs( uint8_t n ){
   // set timestamp for last read value
   uint32_t read_time_us = micros();
   deltaT_us = read_time_us - last_call_us;
   last_call_us = read_time_us;
+
+  n = (n>7) ? 7 : n;  // 8 bit number
+
+  memset( i_vals, 0, sizeof(uint16_t)*i_channels ); // clear i_vals
+  for( uint8_t i=0; i<(1<<n); i++ ){
+    uint8_t err = ReadADCs( i_vals, n );  // read ADC values into i_vals
+    if( err > 0 ){
+      memset( i_vals, 0, sizeof(uint16_t)*i_channels ); // clear i_vals
+      return err;
+    }
+  }
+  return 0;
+}
+
+//! Perform a read of active ADC channels and add the result to dest
+/*!
+  * \param dest is a pointer to the array (length i_channels) where the data
+  * is to be stored
+  * \return error code from amc7812.ReadADCs() operation
+  *
+  * Add result of reads to the values in dest, divided by 2**n (for averaging)
+  */
+uint8_t IO::ReadADCs( int16_t* dest, const uint8_t n ){
+  uint8_t err = amc7812.ReadADCs();
+  if( err > 0 ){
+    return err;
+  }
   // retrieve values
   const uint16_t* adc_vals = amc7812.GetADCReadings();
   for( uint8_t i=0; i<i_channels; i++){
-    i_vals[i] = (int16_t)adc_vals[i];
+    dest[i] += ((int16_t)adc_vals[i])>>n; 
   }
   return 0;
 }

@@ -20,7 +20,7 @@ Controller::Controller( const int16_t* init_output ){
 void Controller::init( const int16_t* init_output ){
   Reset(init_output);
   for(uint8_t o=0; o<o_channels; o++){
-    weights[o][P_INDEX] = 0x7F;
+    weights[o][P_INDEX] = 0x30;
     weights[o][I_INDEX] = 0x00;
     weights[o][D_INDEX] = 0x00;
   }

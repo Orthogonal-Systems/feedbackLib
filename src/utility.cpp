@@ -12,5 +12,5 @@ int16_t CheckRange( int32_t in, int16_t u_bound, int16_t l_bound ){
 }
 
 int16_t CheckRange( int32_t in, int16_t bound ){
-  return CheckRange( in, bound, -bound );
+  return CheckRange( in, bound, -1*bound );
 }
