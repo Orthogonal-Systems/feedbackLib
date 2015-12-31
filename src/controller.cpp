@@ -8,16 +8,16 @@
 Controller::Controller(){
   int16_t init_output[o_channels];
   for(uint8_t o=0; o<o_channels; o++){
-    init_output[o] = 0;
+    init_output[o] = 0x0800;
   }
   init(init_output);
 }
 
-Controller::Controller( int16_t* init_output ){
+Controller::Controller( const int16_t* init_output ){
   init(init_output);
 }
 
-void Controller::init( int16_t* init_output ){
+void Controller::init( const int16_t* init_output ){
   Reset(init_output);
   for(uint8_t o=0; o<o_channels; o++){
     weights[o][P_INDEX] = 0x7F;
@@ -31,7 +31,7 @@ void Controller::init( int16_t* init_output ){
   * \param errors pointer to current error value
   * \return errors code, 0 for no error
   */
-uint8_t Controller::CalcNextValue( errors_t errors ){
+uint8_t Controller::CalcNextValue( const errors_t errors ){
   
   for( uint8_t o=0; o<o_channels; o++ ){
     int32_t temp = output[o];
@@ -54,7 +54,7 @@ uint8_t Controller::CalcNextValue( errors_t errors ){
   * Override the last_output value stored and clear history.
   * It is necessary to initialize to a reasonable output
   */
-void Controller::Reset( int16_t* val ){
+void Controller::Reset( const int16_t* val ){
   for(uint8_t i=0; i<o_channels; i++){
     output[i] = val[i];
   }

@@ -10,9 +10,10 @@ Feedback::Feedback(){
   err = Error();
   int16_t inits[o_channels]; 
   for(uint8_t i=0; i<o_channels; i++){
-    inits[i]=0;
+    inits[i]=0x0800;
   }
   ctrl = Controller(inits);
+  //Update(); // push initial outputs to DAC
 }
 
 uint8_t Feedback::Init(){
@@ -26,9 +27,9 @@ uint8_t Feedback::Measure(){
   if( error > 0 ){
     return error;
   }
-  int16_t* ins = io.GetLastInputs();
-  uint16_t deltaT_us = io.GetDeltaT_us();
-  errors_t errs = err.CalculateErrors( ins, deltaT_us );
+  const int16_t *ins = io.GetLastInputs();
+  uint16_t deltaT_ms = (uint16_t)(io.GetDeltaT_us()/1000);
+  const errors_t errs = err.CalculateErrors( ins, deltaT_ms );
   ctrl.CalcNextValue( errs );
   // push corrected outputs to system, update occurs on trigger
   io.SetOutputs( ctrl.GetNextValue() );

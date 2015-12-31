@@ -23,6 +23,10 @@ uint8_t IO::Init(){
   // passed initial setup read channel masks from driver
   i_ch_mask = amc7812.GetADCStatus();
   o_ch_mask = amc7812.GetDACStatus();
+
+  // set mode to triggered
+  SetTriggeredADCMode();
+  SetTriggeredDACMode();
   return 0;
 }
 
@@ -40,18 +44,18 @@ int8_t IO::ReadInputs(){
     return err;
   }
   // set timestamp for last read value
-  uint16_t read_time_us = (uint16_t)micros();
+  uint32_t read_time_us = micros();
   deltaT_us = read_time_us - last_call_us;
   last_call_us = read_time_us;
   // retrieve values
-  uint16_t* adc_vals = amc7812.GetADCReadings();
+  const uint16_t* adc_vals = amc7812.GetADCReadings();
   for( uint8_t i=0; i<i_channels; i++){
     i_vals[i] = (int16_t)adc_vals[i];
   }
   return 0;
 }
 
-void IO::SetOutputs( int16_t* setpoints ){
+void IO::SetOutputs( const int16_t* setpoints ){
   // TODO: convert from signed to unsigned?
   for( uint8_t i=0; i<o_channels; i++ ){
     amc7812.WriteDAC( i, (uint16_t)setpoints[i] );
@@ -62,7 +66,7 @@ void IO::SetOutputs( int16_t* setpoints ){
 /*!
   * Enabled channels are denoted by a 1 in the corresponding bit.
   */
-void IO::SetEnabledIChannels(uint16_t mask){
+void IO::SetEnabledIChannels( const uint16_t mask){
   for( uint8_t i=0; i<i_channels; i++ ){
     if( (mask>>i)&(0x01) ){
       amc7812.EnableADC(i);
@@ -75,11 +79,45 @@ void IO::SetEnabledIChannels(uint16_t mask){
 /*!
   * Enabled channels are denoted by a 1 in the corresponding bit.
   */
-void IO::SetEnabledOChannels(uint16_t mask){
+void IO::SetEnabledOChannels( const uint16_t mask){
   for( uint8_t i=0; i<o_channels; i++ ){
     if( (mask>>i)&(0x01) ){
       amc7812.EnableDAC(i);
     }
   }
   o_ch_mask = mask;
+}
+
+//! Set the ADC update mode to triggered
+/*!
+  *  The adc values will only be pushed to the outputs when triggered
+  */
+void IO::SetTriggeredADCMode(){
+  amc7812.SetTriggeredADCMode();
+}
+
+//! Set the ADC update mode to continuous
+/*!
+  *  The adc values will be pushed to the outputs as soon as the register is
+  *  updated
+  */
+void IO::SetContinuousADCMode(){
+  amc7812.SetContinuousADCMode();
+}
+
+//! Set the DAC update mode to triggered
+/*!
+  *  The dac values will only be pushed to the outputs when triggered
+  */
+void IO::SetTriggeredDACMode(){
+  amc7812.SetTriggeredDACMode();
+}
+
+//! Set the DAC update mode to continuous
+/*!
+  *  The dac values will be pushed to the outputs as soon as the register is
+  *  updated
+  */
+void IO::SetContinuousDACMode(){
+  amc7812.SetContinuousDACMode();
 }
